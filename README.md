@@ -52,6 +52,10 @@ class SkypeContactDBB(SkypeDBB) -- userDDDD.dbb file reader
 
 class SkypeContact -- provides human-readable field names for contacts record
 
+class SkypeCallDBB(SkypeDBB) -- callDDDD.dbb file reader
+    reading methods return SkypeCall instead of 'dict'
+
+class SkypeCall -- provides human-readable field names for call records
 
 Interesting discussion of the *.dbb file format:
     http://www.hackerfactor.com/blog/index.php?/archives/231-Skype-Logs.html
