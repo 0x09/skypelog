@@ -24,7 +24,8 @@ import platform
 
 __all__ = ['SkypeDBB', 'SkypeMsgDBB', 'SkypeMsg',
            'SkypeAccDBB', 'SkypeAcc','SkypeContactDBB', 'SkypeContact',
-           'SkypeChatDBB', 'SkypeChat', 'SkypeChatMemberDBB', 'SkypeChatMember']
+           'SkypeChatDBB', 'SkypeChat', 'SkypeChatMemberDBB', 'SkypeChatMember',
+           'SkypeCall', 'SkypeCallDBB']
 
 
 class SkypeDBB:
@@ -400,6 +401,76 @@ class SkypeChatMember(SkypeObject):
 
     __slots__ = FIELD_NAMES.values()
 
+class SkypeCallDBB(SkypeDBB):
+    def parserecord(self, rec):
+        return SkypeCall(SkypeDBB.parserecord(self, rec))
+
+    def json_full(self):
+        return json.dumps(self.__dict__, sort_keys=True, ensure_ascii=False)
+
+class SkypeCall(SkypeObject):
+    """Represent and format call records"""
+
+    # calls contain separate records with different keys for the host and each member
+    # these can grouped by the call name, and member records also contain a reference
+    # to the host's record ID.
+    # key names mostly taken from main.db equivalent
+    FIELD_NAMES = {   -1 : 'recid',
+                      -2 : 'ctime',
+                      -3 : 'is_host',
+                      -4 : 'gname',
+                       3 : 'str3',
+                       7 : 'call_recid',
+                      11 : 'str11',
+                     161 : 'begin_timestamp',
+                     252 : 'topic',
+                     184 : 'call_name',
+                     # nonzero only when joining after the call started
+                     693 : 'start_timestamp',
+
+                     # booleans inferred from corresponding main.db positions
+                     813 : 'is_muted',
+                     817 : 'is_unseen_missed',
+
+                     840 : 'host_identity',
+                     849 : 'duration',
+                     868 : 'name',
+                     917 : 'int917',
+
+                     # member-specific keys
+                     920 : 'identity',
+                     924 : 'dispname',
+                     933 : 'call_duration',
+                     945 : 'type',
+                     949 : 'status',
+                     953 : 'failurereason',
+                     964 : 'pstn_statustext',
+                     3296: 'real_identity',
+                     3301: 'member_start_timestamp',
+                   }
+
+    __slots__ = FIELD_NAMES.values()
+
+    def __init__(self, data):
+        SkypeObject.__init__(self, data)
+        # add the call name to "gname" irrespective of whether this is a host record
+        self.is_host = 'name' in self.__dict__
+        if self.is_host:
+            self.gname = self.name
+            try:
+                self.ctime = time.ctime(self.begin_timestamp)
+            except:
+                self.ctime = 'Unknown'
+        else:
+            if 'call_name' in self.__dict__:
+                self.gname = self.call_name
+            try:
+                self.ctime = time.ctime(self.member_start_timestamp)
+            except:
+                self.ctime = 'Unknown'
+
+    def json_full(self):
+        return json.dumps(self.__dict__, sort_keys=True, ensure_ascii=False)
 
 # -----------------------------------------------------------------------------
 # End of API, local functions follow
