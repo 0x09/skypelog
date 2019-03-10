@@ -507,11 +507,23 @@ def dumpmsg_json_full_helper(user, chatdbbs):
             for r in msgdbb.records():
                 f.write(r.json_full() + ",\n")
 
+def dumpcall_json_full_helper(user, chatdbbs):
+    """Dump full messages from 'chatdbbs' files to 'user'.js file (unsorted)"""
+    fname = user + '.calls.js'
+    print "writing %s ..." % fname
+    with open(fname, 'wb') as f:
+        for filename in chatdbbs:
+            msgdbb = SkypeCallDBB(filename)
+            for r in msgdbb.records():
+                f.write(r.json_full() + ",\n")
 
 def dumpmsg_json_full():
     """Dump full chat logs for every user"""
     forskypedbbs(dumpmsg_json_full_helper, "chatmsg")
 
+def dumpcall_json_full():
+    """Dump full chat logs for every user"""
+    forskypedbbs(dumpcall_json_full_helper, "call")
 
 def dumpmsg_json_compact_helper(user, chatdbbs):
     """Dump messages from 'chatdbbs' files to 'user'.js file (unsorted)"""
@@ -638,7 +650,7 @@ Dump Skype chat history to files in the current directory
 
 Option:
   -h, --help                Show this help message
-  -j, --json={compact,full} Save history for each user in *.js file (unsorted)
+  -j, --json={compact,full,calls} Save history for each user in *.js file (unsorted)
   -t, --html                Save history for user/contact pair in *.html files
   -m, --mode={append,overwrite} HTML output mode (guess by default)
   -l, --limit=bytes[KM]     Limit output html file size
@@ -672,6 +684,9 @@ def main():
             elif arg in ("full"):
                 print "Dumping chat history to JSON (full)..."
                 action.append('dumpmsg_json_full')
+            elif arg in ("calls"):
+                print "Dumping call history to JSON (full)..."
+                action.append('dumpcall_json_full')
             else:
                 print "JSON: unknown argument '%s'" % arg
                 action.append('usage')
